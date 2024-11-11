@@ -24,6 +24,7 @@ public:
         return &singleton;
     }
 
+    bool in_combat = false;
 
     [[maybe_unused]] RE::BSEventNotifyControl ProcessEvent(const RE::TESContainerChangedEvent*,
                                           RE::BSTEventSource<RE::TESContainerChangedEvent>*) override;
@@ -48,12 +49,10 @@ private:
 
     std::map<std::string, datetime::time_point> menu_times;
 
-    bool in_combat = false;
 
     explicit ourEventSink(Manager* manager) : M(manager){ 
         if (SaveSettings::timer_periodic && SaveSettings::timer_running) {
-            M->QueueSaveGame(SaveSettings::timer_minutes * 60 + SaveSettings::timer_seconds,
-                             SaveSettings::Scenarios::Timer);
+			M->QueueTimer();
 		}
-    };
+    }
 };

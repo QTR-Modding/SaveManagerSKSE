@@ -150,9 +150,7 @@ void MCP::Settings::RenderTimer(){
         ImGui::InputInt("##timer_seconds", &SaveSettings::timer_seconds);
         ImGui::SameLine();
         if (ImGui::Button("Start##timer")) {
-            M->QueueSaveGame(SaveSettings::timer_minutes * 60 + SaveSettings::timer_seconds,
-                             SaveSettings::Scenarios::Timer);
-            SaveSettings::timer_running = true;
+			M->QueueTimer();
         }
         ImGui::SameLine();
         if (ImGui::Button("Stop##timer")) {
@@ -162,9 +160,7 @@ void MCP::Settings::RenderTimer(){
         ImGui::SameLine();
         if (ImGui::Button("Reset##timer")) {
             if (M->DeleteQueuedSave(SaveSettings::Scenarios::Timer)) {
-                M->QueueSaveGame(SaveSettings::timer_minutes * 60 + SaveSettings::timer_seconds,
-                                 SaveSettings::Scenarios::Timer);
-                SaveSettings::timer_running = true;
+				M->QueueTimer();
             } else {
                 SaveSettings::timer_minutes = 0;
                 SaveSettings::timer_seconds = 0;
@@ -404,7 +400,7 @@ void __stdcall MCP::RenderStatus(){
 		}
 	} else {
 		if (ImGui::Button("Enable Mod")) {
-			M->EnableMod();
+            Manager::EnableMod();
 		}
 	}
 

@@ -40,6 +40,7 @@ RE::BSEventNotifyControl ourEventSink::ProcessEvent(const RE::MenuOpenCloseEvent
 RE::BSEventNotifyControl ourEventSink::ProcessEvent(const RE::TESSleepStopEvent* event,
                                                     RE::BSTEventSource<RE::TESSleepStopEvent>*) {
     if (!event) return RE::BSEventNotifyControl::kContinue;
+	if (!SaveSettings::SleepWait::sleep) return RE::BSEventNotifyControl::kContinue;
 
     M->QueueSaveGame(SaveSettings::SleepWait::sleep_time, SaveSettings::Scenarios::SleepWaitStop);
 
@@ -75,7 +76,7 @@ RE::BSEventNotifyControl ourEventSink::ProcessEvent(const RE::TESCombatEvent* ev
         return RE::BSEventNotifyControl::kContinue;
     };
 
-    if (auto* event_target = event->targetActor.get(); !event_target || !event_target->IsPlayerRef()) return RE::BSEventNotifyControl::kContinue;
+    if (const auto* event_target = event->targetActor.get(); !event_target || !event_target->IsPlayerRef()) return RE::BSEventNotifyControl::kContinue;
 
     if (!in_combat) {
 		in_combat = true;
