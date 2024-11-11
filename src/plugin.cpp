@@ -3,6 +3,8 @@
 #include "UI.h"
 
 Manager* manager = nullptr;
+ourEventSink* eventSink = nullptr;
+bool timer_was_running = false;
 
 void OnMessage(SKSE::MessagingInterface::Message* message) {
     if (message->type == SKSE::MessagingInterface::kDataLoaded) {
@@ -13,7 +15,7 @@ void OnMessage(SKSE::MessagingInterface::Message* message) {
             PluginSettings::running = false;
             return;
         }
-        auto* eventSink = ourEventSink::GetSingleton(manager);
+        eventSink = ourEventSink::GetSingleton(manager);
         auto* eventSourceHolder = RE::ScriptEventSourceHolder::GetSingleton();
         eventSourceHolder->AddEventSink<RE::TESContainerChangedEvent>(eventSink);
         eventSourceHolder->AddEventSink<RE::TESFurnitureEvent>(eventSink);
@@ -31,10 +33,17 @@ void OnMessage(SKSE::MessagingInterface::Message* message) {
     else if (message->type == SKSE::MessagingInterface::kPreLoadGame)
     {
         game_is_loading.store(true);
+		eventSink->in_combat = false;
+		timer_was_running = SaveSettings::timer_running;
+		manager->ClearQueue();
+		SaveSettings::last_save_time = 0.0f;
 	}
 	else if (message->type == SKSE::MessagingInterface::kPostLoadGame)
 	{
         game_is_loading.store(false);
+		if (timer_was_running) {
+			manager->QueueTimer();
+		}
 	}
 }
 

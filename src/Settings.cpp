@@ -196,8 +196,7 @@ void SaveSettings::LoadJSON(){
         if (menu.HasMember("Open") && menu["Open"].IsObject()) {
 		    const auto& open = menu["Open"];
 		    for (auto it = open.MemberBegin(); it != open.MemberEnd(); ++it) {
-			    const std::string name = it->name.GetString();
-			    if (SaveSettings::Menu::Open.find(name) != SaveSettings::Menu::Open.end()) {
+                if (const std::string name = it->name.GetString(); SaveSettings::Menu::Open.contains(name)) {
 				    const auto& value = it->value;
 				    if (value.HasMember("enabled") && value["enabled"].IsBool()) SaveSettings::Menu::Open[name].first = value["enabled"].GetBool();
 				    if (value.HasMember("scenario") && value["scenario"].IsInt()) SaveSettings::Menu::Open[name].second = static_cast<SaveSettings::Scenarios>(value["scenario"].GetInt());

@@ -20,9 +20,10 @@ void Manager::QueueSaveGame(int seconds, SaveSettings::Scenarios scenario) {
 
     // if Timer is queued, dont allow a second one
     if (scenario == SaveSettings::Scenarios::Timer) {
-		for (const auto& [fst, snd] : queue) {
+		for (const auto& snd : queue | std::views::values) {
 			if (snd == SaveSettings::Scenarios::Timer) return;
 		}
+		SaveSettings::timer_running = true;
 	}
 
     seconds = std::max(1, seconds);
@@ -59,6 +60,18 @@ void Manager::ClearQueue(){
     // mutex lock
     std::unique_lock<std::shared_mutex> lock(sharedMutex_);
     queue.clear();
+	SaveSettings::timer_running = false;
+}
+//inline bool Manager::IsInQueue(SaveSettings::Scenarios scenario)
+//{
+//	// mutex lock
+//	std::shared_lock<std::shared_mutex> lock(sharedMutex_);
+//	return std::ranges::any_of(queue, [scenario](const auto& pair) { return pair.second == scenario; });
+//
+//}
+inline void Manager::QueueTimer()
+{
+	QueueSaveGame(SaveSettings::timer_minutes * 60 + SaveSettings::timer_seconds, SaveSettings::Scenarios::Timer);
 };
 
 void Manager::UpdateLoop() {
@@ -123,7 +136,7 @@ void Manager::UpdateLoop() {
                 QueueSaveGame(10, SaveSettings::Scenarios::QuitGame);
             }
             else if (SaveSettings::timer_periodic) {
-                QueueSaveGame(SaveSettings::timer_minutes * 60 + SaveSettings::timer_seconds, SaveSettings::Scenarios::Timer);
+				QueueTimer();
             }
             else SaveSettings::timer_running = false;
 		    if (SaveSettings::close_game_warning) RE::DebugMessageBox("Time is up, close the game!");
@@ -154,10 +167,13 @@ bool Manager::SaveGame(const SaveSettings::Scenarios reason) {
         logger::error("PlayerCharacter ActorState is null!");
         return false;
     }
+	const auto player_camera = RE::PlayerCamera::GetSingleton();
     const auto attack_state = static_cast<uint32_t>(player_actorstate->GetAttackState());
     if (SaveSettings::block || 
         !player->GetParentCell() ||
         player->IsDead() ||
+        !player_camera ||
+        player_camera->IsInBleedoutMode() ||
         player->IsOnMount() ||
         player->IsInCombat() ||
         player->IsInRagdollState() ||

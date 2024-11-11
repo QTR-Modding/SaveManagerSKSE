@@ -46,4 +46,8 @@ public:
 
     inline void ClearQueue();
 
+	//inline bool IsInQueue(SaveSettings::Scenarios scenario);
+
+    inline void QueueTimer();
+
 };
