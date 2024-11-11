@@ -40,6 +40,7 @@ RE::BSEventNotifyControl ourEventSink::ProcessEvent(const RE::MenuOpenCloseEvent
 RE::BSEventNotifyControl ourEventSink::ProcessEvent(const RE::TESSleepStopEvent* event,
                                                     RE::BSTEventSource<RE::TESSleepStopEvent>*) {
     if (!event) return RE::BSEventNotifyControl::kContinue;
+	if (!SaveSettings::SleepWait::sleep) return RE::BSEventNotifyControl::kContinue;
 
     M->QueueSaveGame(SaveSettings::SleepWait::sleep_time, SaveSettings::Scenarios::SleepWaitStop);
 
