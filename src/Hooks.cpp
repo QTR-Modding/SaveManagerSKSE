@@ -23,6 +23,8 @@ RE::UI_MESSAGE_RESULTS MenuHook<MenuType>::ProcessMessage_Hook(RE::UIMessage& a_
             }
         } else logger::error("MenuHook: {}, menu not found", menuName);
     }
+
+	logger::info("MenuHook: {}", a_message.menu);
     return _ProcessMessage(this, a_message);
 }
 
@@ -36,6 +38,8 @@ void Hooks::Install(){
     MenuHook<RE::LockpickingMenu>::InstallHook(RE::VTABLE_LockpickingMenu[0]);
     MenuHook<RE::MagicMenu>::InstallHook(RE::VTABLE_MagicMenu[0]);
     MenuHook<RE::MapMenu>::InstallHook(RE::VTABLE_MapMenu[0]);
+
+    SaveHook::InstallHook();
 
     auto& trampoline = SKSE::GetTrampoline();
     trampoline.create(Hooks::trampoline_size);
@@ -58,3 +62,22 @@ void Hooks::SaveDebugNotifHook::InstallHook(){
     REL::Relocation<std::uintptr_t> originalFunc{RELOCATION_ID(50737, 51632)};
     func = trampoline.write_call<5>(originalFunc.address() + REL::Relocate(0xaf, 0xaf), thunk);
 };
+
+void Hooks::SaveHook::Accept(RE::Journal_SystemTab* a_this, RE::CallbackProcessor* a_cbReg)
+{
+	logger::info("SaveHook: Accept");
+	originalFunction(a_this, a_cbReg);
+}
+
+void Hooks::SaveHook::Process(RE::FxDelegateHandler::CallbackProcessor* a_this, const RE::GString& a_methodName, CallbackFn* a_method)
+{
+	logger::info("SaveHook: {}", a_methodName.c_str());
+	originalFunction2(a_this, a_methodName, a_method);
+}
+
+void Hooks::SaveHook::InstallHook()
+{
+    originalFunction = REL::Relocation<std::uintptr_t>(RE::Journal_SystemTab::VTABLE[0]).write_vfunc(0x1, Accept);
+	originalFunction2 = REL::Relocation<std::uintptr_t>(RE::VTABLE_FxDelegateHandler__CallbackProcessor[0]).write_vfunc(0x1, Process);
+
+}

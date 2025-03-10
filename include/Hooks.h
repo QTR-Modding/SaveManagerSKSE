@@ -22,18 +22,16 @@ namespace Hooks {
 		static void InstallHook();
     };
 
-    //struct MenuControlsHook {
-    //public:
-    //    static void InstallHook() {
-    //        REL::Relocation<std::uintptr_t> MenuControlsVtbl{RE::VTABLE_MenuControls[0]};
-    //        _ProcessEvent = MenuControlsVtbl.write_vfunc(0x1, ProcessEvent);
-    //    }
+    struct SaveHook {
+        using CallbackFn = void(const RE::FxDelegateArgs& a_params);
+        static inline REL::Relocation<void(RE::Journal_SystemTab*,RE::CallbackProcessor*)> originalFunction;
+        static inline REL::Relocation<void(RE::FxDelegateHandler::CallbackProcessor*,const RE::GString&, CallbackFn*)> originalFunction2;
+        
+		static void Accept(RE::Journal_SystemTab* a_this, RE::CallbackProcessor* a_cbReg);
+        //VTABLE_FxDelegateHandler__CallbackProcessor
+		static void Process(RE::FxDelegateHandler::CallbackProcessor* a_this, const RE::GString& a_methodName, CallbackFn* a_method);
 
-    //private:
-    //    static RE::BSEventNotifyControl ProcessEvent(RE::MenuControls* a_menuControls, RE::InputEvent* const* a_event,
-    //                                                 RE::BSTEventSource<RE::InputEvent*>* a_eventSource);
-
-    //    static inline REL::Relocation<decltype(ProcessEvent)> _ProcessEvent;
-    //};
+        static void InstallHook();
+    };
 
 };

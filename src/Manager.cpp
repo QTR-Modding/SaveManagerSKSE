@@ -1,4 +1,5 @@
 #include "Manager.h"
+#include <ranges>
 
 
 void Manager::Uninstall() {}
@@ -102,7 +103,7 @@ void Manager::UpdateLoop() {
         ui->IsMenuOpen(RE::MainMenu::MENU_NAME) ||
         ui->IsMenuOpen(RE::LoadingMenu::MENU_NAME) ||
         game_is_loading.load()) {
-		logger::info("Game is paused or menu is open, returning...");
+		logger::trace("Game is paused or menu is open, returning...");
 		return;
 	}
 
