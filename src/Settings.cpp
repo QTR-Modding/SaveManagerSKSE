@@ -383,7 +383,7 @@ bool SaveRegistry::Add(const uint32_t charID, const uint32_t saveNo)
 
 bool SaveRegistry::Remove(const uint32_t charID, const uint32_t saveNo)
 {
-    const auto save_manager = RE::SaveLoadManager::GetSingleton();
+    const auto save_manager = RE::BGSSaveLoadManager::GetSingleton();
 	save_manager->PopulateSaveList();
 	std::string filename;
     for (const auto& it : save_manager->saveGameList) {
@@ -402,7 +402,7 @@ void SaveRegistry::HandleRotation()
 {
 	if (max_saves <= 0) return;
 
-    const auto manager = RE::SaveLoadManager::GetSingleton();
+    const auto manager = RE::BGSSaveLoadManager::GetSingleton();
 	manager->PopulateSaveList();
     const auto curr_playerID = manager->displayCharacterID;
 
