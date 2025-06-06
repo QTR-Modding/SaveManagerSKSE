@@ -22,12 +22,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
 
 
-
-
 configure_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.rc.in
-        ${CMAKE_CURRENT_BINARY_DIR}/version.rc
-        @ONLY)
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.rc.in
+    ${CMAKE_CURRENT_BINARY_DIR}/version.rc
+    @ONLY)
 
 set(RESOURCE_FILE ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
 set(RESOURCE_OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/version.res)
@@ -47,19 +45,17 @@ set(ENABLE_SKYRIM_AE ON CACHE BOOL " " FORCE)
 set(ENABLE_SKYRIM_VR ON CACHE BOOL " " FORCE)
 set(BUILD_TESTS OFF CACHE BOOL " " FORCE)
 
-#FetchContent_MakeAvailable(CommonLibNG)
-add_subdirectory("$ENV{CLIBNG_ROOT}" ${CMAKE_CURRENT_BINARY_DIR}/_deps/clib-build)
-get_target_property(commonlib_src_dir CommonLibSSE SOURCE_DIR)
+add_subdirectory("$ENV{COMMONLIB_SSE_FOLDER}" ${CMAKE_CURRENT_BINARY_DIR}/_deps/clib-build)
+get_target_property(COMMONLIB_SRC_DIR CommonLibSSE SOURCE_DIR)
 
-# CLIB-UTIL
 find_path(CLIB_UTIL_INCLUDE_DIRS "ClibUtil/utils.hpp")
 find_path(SKSE_MCP_INCLUDE_DIRS "SKSEMCP/utils.hpp")
 
 file(
   GLOB_RECURSE
   sources
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
   ${CMAKE_CURRENT_BINARY_DIR}/version.rc
+  ${sources}
 )
 
 source_group(
@@ -68,7 +64,7 @@ source_group(
 )
 
 set(BUILD_TESTS OFF)
-include(${commonlib_src_dir}/cmake/CommonLibSSE.cmake)
+include(${COMMONLIB_SRC_DIR}/cmake/CommonLibSSE.cmake)
 
 add_commonlibsse_plugin(
   ${PROJECT_NAME}
@@ -81,7 +77,7 @@ target_include_directories(
 	${PROJECT_NAME}
 	PRIVATE
 	${CLIB_UTIL_INCLUDE_DIRS}
-	${SKSE_MCP_INCLUDE_DIRS}
+    ${SKSE_MCP_INCLUDE_DIRS}
 	${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
@@ -91,4 +87,5 @@ set(wildlander_output false)
 set(steam_owrt_output false)
 set(steam_mods_output true)
 set(lorerim_mods_output true)
-automaticGameFolderOutput(wildlander_output, steam_owrt_output, steam_mods_output, lorerim_mods_output)
+set(lorerim3_mods_output true)
+automaticGameFolderOutput(wildlander_output, steam_owrt_output, steam_mods_output lorerim_mods_output lorerim3_mods_output)
