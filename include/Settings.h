@@ -1,8 +1,7 @@
 #pragma once
-
-#include "Data.h"
 #include "Utils.h"
-
+#include <boost/circular_buffer.hpp>
+#include "rapidjson/document.h"
 
 //namespace GameLock {
 //    enum State { None, Locked, Unlocked };
@@ -10,6 +9,7 @@
 //    void SetState(State currentState);
 //};
 
+// ReSharper disable once CppMultiCharacterLiteral
 constexpr std::uint32_t kDataKey = 'ASSE';
 const std::string settings_save_path = std::format("Data/SKSE/Plugins/{}/Settings.json", Utilities::mod_name);
 const std::string registry_save_path = std::format("Data/SKSE/Plugins/{}/Registry.json", Utilities::mod_name);
@@ -41,7 +41,7 @@ namespace SaveSettings {
 	
 	inline bool auto_save_to_json = true;
     inline bool regular_saves = false;
-    inline float min_save_interval = std::max(0.0f, temp_min_save_interval / 60.f); // in in-game hours
+    inline float min_save_interval = std::max(0.0f, static_cast<float>(temp_min_save_interval) / 60.f); // in in-game hours
 
 	rapidjson::Value to_json_main_stuff(Document::AllocatorType& a);
 	rapidjson::Value to_json_timer_stuff(Document::AllocatorType& a);

@@ -1,4 +1,10 @@
 #include "Settings.h"
+#include "Data.h"
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
+#include <rapidjson/error/en.h>
+#include <rapidjson/istreamwrapper.h>
+
 
 std::map<std::string, std::pair<bool, SaveSettings::Scenarios>> SaveSettings::Menu::Open {
     {std::string(RE::ContainerMenu::MENU_NAME), {false, SaveSettings::Scenarios::MenuOpenContainerMenu}},
@@ -178,7 +184,7 @@ void SaveSettings::LoadJSON(){
 	    if (main.HasMember("notifications") && main["notifications"].IsBool()) notifications = main["notifications"].GetBool();
 		if (main.HasMember("queue_notif") && main["queue_notif"].IsBool()) queue_notif = main["queue_notif"].GetBool();
         if (main.HasMember("min_save_interval") && main["min_save_interval"].IsInt()) temp_min_save_interval = main["min_save_interval"].GetInt();
-        min_save_interval = std::max(0.0f, temp_min_save_interval / 60.f);
+        min_save_interval = std::max(0.0f, static_cast<float>(temp_min_save_interval) / 60.f);
     }
 
 	// Timer
@@ -424,7 +430,7 @@ void SaveRegistry::HandleRotation()
     }
 	
 	const auto first_saveno = registry.contains(curr_playerID) && !registry[curr_playerID].empty() ? registry[curr_playerID].front() : 0;
-    if (const auto removed_first = Add(curr_playerID, last_save_no+1)) Remove(curr_playerID,first_saveno);
+    if ([[maybe_unused]] const auto removed_first = Add(curr_playerID, last_save_no+1)) Remove(curr_playerID,first_saveno);
 	to_json();
 }
 
