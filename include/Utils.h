@@ -1,31 +1,5 @@
 #pragma once
 
-#include "rapidjson/document.h"
-#include <rapidjson/error/en.h>
-#include <rapidjson/istreamwrapper.h>
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/writer.h>
-
-//#include <chrono>
-#include <windows.h>
-#include <functional>
-#include <unordered_set>
-#include <unordered_map>
-#include "SimpleIni.h"
-#include <iostream>
-#include <string>
-#include <codecvt>
-#include <mutex>
-#include <algorithm>
-#include <ClibUtil/editorID.hpp>
-#include <filesystem>
-#include <fstream>
-#include <boost/circular_buffer.hpp>
-
-#include "SaveLoadManager.h"
-
-
-
 namespace Utilities {
 
     const auto mod_name = static_cast<std::string>(SKSE::PluginDeclaration::GetSingleton()->GetName());
@@ -42,7 +16,7 @@ namespace Utilities {
 
 };
 
-constexpr std::array<int, 4> bow_attack_states = {8, 10, 11, 13};
-bool IsInBowAttackState(const int attack_state);
+constexpr std::array bow_attack_states = {8, 10, 11, 13};
+bool IsInBowAttackState(int attack_state);
 
 

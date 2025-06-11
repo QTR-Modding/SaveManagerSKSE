@@ -1,4 +1,5 @@
 #include "Serialization.h"
+#include "Settings.h"
 
 void SaveCallback(SKSE::SerializationInterface*) { if (SaveSettings::auto_save_to_json) SaveSettings::SaveJSON(); }
 
