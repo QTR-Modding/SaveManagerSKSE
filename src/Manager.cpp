@@ -12,8 +12,6 @@ void Manager::EnableMod(){
 };
 
 void Manager::QueueSaveGame(int seconds, SaveSettings::Scenarios scenario) {
-    // mutex lock
-    //std::lock_guard<std::mutex> lock(mutex);
 
     if (SaveSettings::block) return;
     if (!PluginSettings::running) return;
@@ -38,13 +36,13 @@ void Manager::QueueSaveGame(int seconds, SaveSettings::Scenarios scenario) {
 
 std::vector<std::pair<int, SaveSettings::Scenarios>> Manager::GetQueue() {
     // mutex lock
-	std::shared_lock<std::shared_mutex> lock(sharedMutex_);
+	std::shared_lock lock(sharedMutex_);
     return std::vector(queue.begin(), queue.end());
 }
 
 bool Manager::DeleteQueuedSave(const SaveSettings::Scenarios scenario){
     // mutex lock
-	std::unique_lock<std::shared_mutex> lock(sharedMutex_);
+	std::unique_lock lock(sharedMutex_);
     bool deleted = false;
 	for (auto it = queue.begin(); it != queue.end();) {
 		if (it->second == scenario) {
@@ -58,17 +56,11 @@ bool Manager::DeleteQueuedSave(const SaveSettings::Scenarios scenario){
 void Manager::ClearQueue(){
     Stop();
     // mutex lock
-    std::unique_lock<std::shared_mutex> lock(sharedMutex_);
+    std::unique_lock lock(sharedMutex_);
     queue.clear();
 	SaveSettings::timer_running = false;
 }
-//inline bool Manager::IsInQueue(SaveSettings::Scenarios scenario)
-//{
-//	// mutex lock
-//	std::shared_lock<std::shared_mutex> lock(sharedMutex_);
-//	return std::ranges::any_of(queue, [scenario](const auto& pair) { return pair.second == scenario; });
-//
-//}
+
 inline void Manager::QueueTimer()
 {
 	QueueSaveGame(SaveSettings::timer_minutes * 60 + SaveSettings::timer_seconds, SaveSettings::Scenarios::Timer);
@@ -82,15 +74,10 @@ void Manager::UpdateLoop() {
     }
 
     auto clearBusy = [](std::atomic<bool>* busyFlag) {
-        //logger::trace("Clearing busy flag");
         busyFlag->store(false);
     };
 
     std::unique_ptr<std::atomic<bool>, decltype(clearBusy)> guard(&m_Busy, clearBusy);
-
-    // mutex lock
-    //std::lock_guard<std::mutex> lock(mutex);
-    
 
     if (queue.empty()) {
         logger::trace("Queue is empty, stopping...");
@@ -111,7 +98,7 @@ void Manager::UpdateLoop() {
     SaveSettings::Scenarios reason = {};
     const auto deduct = SaveSettings::ticker_interval;
     // unpack the queue to a vector
-    std::vector<std::pair<int, SaveSettings::Scenarios>> queue_vector(queue.begin(), queue.end());
+    std::vector queue_vector(queue.begin(), queue.end());
     for (auto it = queue_vector.begin(); it != queue_vector.end();) {
         it->first -= deduct;
         if (it->first <= 0) {
@@ -205,26 +192,6 @@ bool Manager::SaveGame(const SaveSettings::Scenarios reason) {
     }
     
     logger::info("Saving game...");
-    /*SKSE::GetTaskInterface()->AddTask([]() {*/
-        //auto slm = RE::BGSSaveLoadManager::GetSingleton();
-        //if (!slm) return;
-        //if (slm->thread.isBusy) return;
-        ////if (SaveSettings::freeze_game) GameLock::SetState(GameLock::State::Locked);
-        //const auto player = RE::PlayerCharacter::GetSingleton();
-        //if (!player) return;
-        //auto cell = player->GetParentCell();
-        //if (!cell) return;
-        //const auto ws = player->GetWorldspace(); 
-        //if (!ws) return;
-        //const auto player_name = std::string(player->GetName());
-        //const std::string date = "_" + std::format("{:%y%m%d%H%M%S}", std::chrono::system_clock::now());
-        //auto player_parentcell = std::string(cell->GetFullName());
-        //auto player_ws = std::string(ws->GetFullName());
-        //if (!player_parentcell.empty()) player_parentcell = "_" + player_parentcell;
-        //if (!player_ws.empty()) player_ws = "_" + player_ws;
-        //slm->Save((player_name + player_ws + player_parentcell + date).c_str());
-        //GameLock::SetState(GameLock::State::Unlocked);
-	//});
     SKSE::GetTaskInterface()->AddTask(MainSaveFunction);
 	return true;
 }

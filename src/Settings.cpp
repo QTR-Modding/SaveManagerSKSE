@@ -34,14 +34,6 @@ std::map<std::string, std::pair<bool,SaveSettings::Scenarios>> SaveSettings::Men
     {std::string(RE::MapMenu::MENU_NAME), {false, SaveSettings::Scenarios::MenuCloseMapMenu}},
 };
 
-//void GameLock::SetState(GameLock::State currentState) {
-//    if (GameLock::lastState == currentState || !SaveSettings::freeze_game) return;
-//    GameLock::lastState = currentState;
-//    const auto main = RE::Main::GetSingleton();
-//    if (currentState == GameLock::State::Locked) main->freezeTime = true;
-//    else main->freezeTime = false;
-//};
-
 std::map<std::string, int> SaveSettings::Menu::After = {
     {std::string(RE::ContainerMenu::MENU_NAME), 4},
     {std::string(RE::BarterMenu::MENU_NAME), 4},
@@ -111,7 +103,7 @@ void SaveSettings::SaveJSON() {
 
     // Convert JSON document to string
     rapidjson::StringBuffer buffer;
-    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    rapidjson::Writer writer(buffer);
     doc.Accept(writer);
 
     // Write JSON to file
@@ -466,7 +458,7 @@ void SaveRegistry::to_json()
 
     // Convert JSON document to string
     StringBuffer buffer;
-    Writer<rapidjson::StringBuffer> writer(buffer);
+    Writer writer(buffer);
     doc.Accept(writer);
 
     // Write JSON to file

@@ -4,8 +4,8 @@ using namespace Hooks;
 
 template <typename MenuType>
 void MenuHook<MenuType>::InstallHook(const REL::VariantID& varID) {
-    REL::Relocation<std::uintptr_t> vTable(varID);
-    _ProcessMessage = vTable.write_vfunc(0x4, &MenuHook<MenuType>::ProcessMessage_Hook);
+    REL::Relocation vTable(varID);
+    _ProcessMessage = vTable.write_vfunc(0x4, &MenuHook::ProcessMessage_Hook);
 }
 
 template <typename MenuType>
@@ -27,21 +27,9 @@ RE::UI_MESSAGE_RESULTS MenuHook<MenuType>::ProcessMessage_Hook(RE::UIMessage& a_
 }
 
 void Hooks::Install(){
-    MenuHook<RE::ContainerMenu>::InstallHook(RE::VTABLE_ContainerMenu[0]);
-    MenuHook<RE::BarterMenu>::InstallHook(RE::VTABLE_BarterMenu[0]);
-    MenuHook<RE::CraftingMenu>::InstallHook(RE::VTABLE_CraftingMenu[0]);
-    MenuHook<RE::DialogueMenu>::InstallHook(RE::VTABLE_DialogueMenu[0]);
-    MenuHook<RE::FavoritesMenu>::InstallHook(RE::VTABLE_FavoritesMenu[0]);
-	MenuHook<RE::InventoryMenu>::InstallHook(RE::VTABLE_InventoryMenu[0]);
-    MenuHook<RE::LockpickingMenu>::InstallHook(RE::VTABLE_LockpickingMenu[0]);
-    MenuHook<RE::MagicMenu>::InstallHook(RE::VTABLE_MagicMenu[0]);
-    MenuHook<RE::MapMenu>::InstallHook(RE::VTABLE_MapMenu[0]);
-
     auto& trampoline = SKSE::GetTrampoline();
     trampoline.create(Hooks::trampoline_size);
     SaveDebugNotifHook::InstallHook();
-
-    //MenuControlsHook::InstallHook();
 };
 
 void Hooks::SaveDebugNotifHook::thunk(const char* a1, uint64_t a2, char a3) {
@@ -55,6 +43,6 @@ void Hooks::SaveDebugNotifHook::thunk(const char* a1, uint64_t a2, char a3) {
 
 void Hooks::SaveDebugNotifHook::InstallHook(){
     auto& trampoline = SKSE::GetTrampoline();
-    REL::Relocation<std::uintptr_t> originalFunc{RELOCATION_ID(50737, 51632)};
+    REL::Relocation originalFunc{RELOCATION_ID(50737, 51632)};
     func = trampoline.write_call<5>(originalFunc.address() + REL::Relocate(0xaf, 0xaf), thunk);
 };

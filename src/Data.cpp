@@ -45,7 +45,7 @@ bool Data::DeleteSaveFile(const RE::BSFixedString& fileName)
 {
     if (fileName.empty()) return false;
 	const auto save_dir = Data::GetSingleton()->GetSaveFileDirectory();
-    if (!save_dir) { logger::critical<>("Failed to obtain save files path!"); return false;}
+    if (!save_dir) { logger::critical("Failed to obtain save files path!"); return false;}
 
     try {
         if (std::filesystem::exists(*save_dir)) {
