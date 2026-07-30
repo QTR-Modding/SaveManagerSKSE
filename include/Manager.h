@@ -6,7 +6,10 @@
 struct PairFirstComparator {
     bool operator()(const std::pair<int, SaveSettings::Scenarios>& lhs,
                     const std::pair<int, SaveSettings::Scenarios>& rhs) const {
-        return lhs.first < rhs.first;
+        if (lhs.first != rhs.first) {
+            return lhs.first < rhs.first;
+        }
+        return lhs.second < rhs.second;
     }
 };
 
