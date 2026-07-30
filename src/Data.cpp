@@ -47,20 +47,20 @@ bool Data::DeleteSaveFile(const RE::BSFixedString& fileName)
 	const auto save_dir = Data::GetSingleton()->GetSaveFileDirectory();
     if (!save_dir) { logger::critical<>("Failed to obtain save files path!"); return false;}
 
+    bool deleted = false;
     try {
         if (std::filesystem::exists(*save_dir)) {
             for (const auto& entry : std::filesystem::directory_iterator(*save_dir)) {
                 if (entry.path().stem() == fileName.data()) {
                     logger::info("Deleting file: '{}'", entry.path().filename().string());
-                    std::filesystem::remove(entry);
-					return true;
+                    if (std::filesystem::remove(entry)) deleted = true;
                 }
             }
         }
     } catch (const std::filesystem::filesystem_error& error) {
 		logger::critical("Addresses::DeathHandler :: An error occurred while deleting save files: {}", error.what());
-		return false;
+		return deleted;
     }
 
-	return true;
+	return deleted;
 }
