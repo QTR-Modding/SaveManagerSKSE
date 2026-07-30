@@ -395,7 +395,7 @@ bool SaveRegistry::Remove(const uint32_t charID, const uint32_t saveNo)
     for (const auto& it : save_manager->saveGameList) {
 		it->PopulateFileEntryData();
 		if (it->characterID != charID) continue;
-        if (const auto save_type = static_cast<int>(it->saveType.get()); save_type != 0x1) continue;
+        if (it->saveType != RE::BGSSaveLoadFileEntry::SaveType::kSave) continue;
 		if (it->saveNumber != saveNo) continue;
 		return Data::DeleteSaveFile(it->fileName);
 	}
@@ -416,7 +416,7 @@ void SaveRegistry::HandleRotation()
 	for (const auto& it : manager->saveGameList) {
 		it->PopulateFileEntryData();
 		if (it->characterID != curr_playerID) continue;
-        if (const auto save_type = static_cast<int>(it->saveType.get()); save_type != 0x1) continue;
+        if (it->saveType != RE::BGSSaveLoadFileEntry::SaveType::kSave) continue;
 		save_nos.insert(it->saveNumber);
 	}
 
@@ -513,6 +513,10 @@ void SaveRegistry::from_json()
         return;
     }
 
+	if (doc.HasMember("max_saves") && doc["max_saves"].IsInt()) {
+		max_saves = doc["max_saves"].GetInt();
+	}
+
     const Value& registry_json = doc["registry"];
     for (auto itr = registry_json.MemberBegin(); itr != registry_json.MemberEnd(); ++itr) {
         // Convert the key back to uint32_t
@@ -525,7 +529,7 @@ void SaveRegistry::from_json()
         }
 
         const Value& buffer_array = itr->value["buffer"];
-        boost::circular_buffer<uint32_t> buffer(buffer_array.Size());
+        boost::circular_buffer<uint32_t> buffer(max_saves);
 
         // Iterate through the buffer array and populate the circular buffer
         for (SizeType i = 0; i < buffer_array.Size(); i++) {
@@ -539,9 +543,5 @@ void SaveRegistry::from_json()
         // Add to the registry map
         SaveRegistry::registry[key] = buffer;
     }
-
-	if (doc.HasMember("max_saves") && doc["max_saves"].IsInt()) {
-		max_saves = doc["max_saves"].GetInt();
-	}
 
 }
