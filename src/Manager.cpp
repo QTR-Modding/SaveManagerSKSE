@@ -12,28 +12,35 @@ void Manager::EnableMod(){
 };
 
 void Manager::QueueSaveGame(int seconds, SaveSettings::Scenarios scenario) {
-    // mutex lock
-    //std::lock_guard<std::mutex> lock(mutex);
-
     if (SaveSettings::block) return;
     if (!PluginSettings::running) return;
 
-    // if Timer is queued, dont allow a second one
-    if (scenario == SaveSettings::Scenarios::Timer) {
-		for (const auto& snd : queue | std::views::values) {
-			if (snd == SaveSettings::Scenarios::Timer) return;
-		}
-		SaveSettings::timer_running = true;
-	}
-
     seconds = std::max(1, seconds);
 
-    if (seconds > 0 && queue.size() < 100) {
-        queue.insert(std::make_pair(seconds, scenario));
-        const auto temp = std::format("Save queued for {} second(s).", seconds);
-        if (SaveSettings::notifications && SaveSettings::queue_notif && scenario != SaveSettings::Scenarios::QuitGame) RE::SendHUDMessage::ShowHUDMessage(temp.c_str());
-        Start();
+    bool inserted = false;
+    {
+        std::unique_lock<std::shared_mutex> lock(sharedMutex_);
+
+        // if Timer is queued, dont allow a second one
+        if (scenario == SaveSettings::Scenarios::Timer) {
+            for (const auto& snd : queue | std::views::values) {
+                if (snd == SaveSettings::Scenarios::Timer) return;
+            }
+        }
+
+        if (queue.size() < 100) {
+            inserted = queue.insert(std::make_pair(seconds, scenario)).second;
+            if (inserted && scenario == SaveSettings::Scenarios::Timer) {
+                SaveSettings::timer_running = true;
+            }
+        }
     }
+
+    if (!inserted) return;
+
+    const auto temp = std::format("Save queued for {} second(s).", seconds);
+    if (SaveSettings::notifications && SaveSettings::queue_notif && scenario != SaveSettings::Scenarios::QuitGame) RE::SendHUDMessage::ShowHUDMessage(temp.c_str());
+    Start();
 }
 
 std::vector<std::pair<int, SaveSettings::Scenarios>> Manager::GetQueue() {
@@ -88,14 +95,13 @@ void Manager::UpdateLoop() {
 
     std::unique_ptr<std::atomic<bool>, decltype(clearBusy)> guard(&m_Busy, clearBusy);
 
-    // mutex lock
-    //std::lock_guard<std::mutex> lock(mutex);
-    
-
-    if (queue.empty()) {
-        logger::trace("Queue is empty, stopping...");
-        Stop();
-        return;
+    {
+        std::shared_lock<std::shared_mutex> lock(sharedMutex_);
+        if (queue.empty()) {
+            logger::trace("Queue is empty, stopping...");
+            Stop();
+            return;
+        }
     }
 	if (const auto ui = RE::UI::GetSingleton();
         ui->GameIsPaused() || 
@@ -110,22 +116,33 @@ void Manager::UpdateLoop() {
     bool save = false;
     SaveSettings::Scenarios reason = {};
     const auto deduct = SaveSettings::ticker_interval;
-    // unpack the queue to a vector
-    std::vector<std::pair<int, SaveSettings::Scenarios>> queue_vector(queue.begin(), queue.end());
-    for (auto it = queue_vector.begin(); it != queue_vector.end();) {
-        it->first -= deduct;
-        if (it->first <= 0) {
-            reason = it->second;
-            it = queue_vector.erase(it);
-            save = true;
-        } else ++it;
-    }
 
-    // repack the vector to the queue
-    queue.clear();
-    for (auto& entry : queue_vector) {
-		queue.insert(entry);
-	}
+    {
+        std::unique_lock<std::shared_mutex> lock(sharedMutex_);
+
+        // unpack the queue to a vector
+        std::vector<std::pair<int, SaveSettings::Scenarios>> queue_vector(queue.begin(), queue.end());
+        for (auto it = queue_vector.begin(); it != queue_vector.end();) {
+            it->first -= deduct;
+            if (it->first <= 0) {
+                // Coalesce simultaneous expirations into one action, prioritizing
+                // quitting first, timer bookkeeping second, and ordinary saves last.
+                if (!save ||
+                    it->second == SaveSettings::Scenarios::QuitGame ||
+                    (it->second == SaveSettings::Scenarios::Timer && reason != SaveSettings::Scenarios::QuitGame)) {
+                    reason = it->second;
+                }
+                it = queue_vector.erase(it);
+                save = true;
+            } else ++it;
+        }
+
+        // repack the vector to the queue
+        queue.clear();
+        for (auto& entry : queue_vector) {
+            queue.insert(entry);
+        }
+    }
 
     if (save) {
         SaveGame(reason);
