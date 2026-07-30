@@ -31,7 +31,7 @@ void Manager::QueueSaveGame(int seconds, SaveSettings::Scenarios scenario) {
     if (seconds > 0 && queue.size() < 100) {
         queue.insert(std::make_pair(seconds, scenario));
         const auto temp = std::format("Save queued for {} second(s).", seconds);
-        if (SaveSettings::notifications && SaveSettings::queue_notif && scenario != SaveSettings::Scenarios::QuitGame) RE::DebugNotification(temp.c_str());
+        if (SaveSettings::notifications && SaveSettings::queue_notif && scenario != SaveSettings::Scenarios::QuitGame) RE::SendHUDMessage::ShowHUDMessage(temp.c_str());
         Start();
     }
 }
@@ -128,44 +128,32 @@ void Manager::UpdateLoop() {
 	}
 
     if (save) {
-        const bool saved = SaveGame(reason);
-        if (reason == SaveSettings::Scenarios::Timer) {
-            if (saved && SaveSettings::close_game) {
-                RE::DebugNotification("Closing game in 10 seconds!");
-                SaveSettings::close_game = false;
-                QueueSaveGame(10, SaveSettings::Scenarios::QuitGame);
-            }
-            else if (SaveSettings::timer_periodic) {
-				QueueTimer();
-            }
-            else SaveSettings::timer_running = false;
-		    if (SaveSettings::close_game_warning) RE::DebugMessageBox("Time is up, close the game!");
-        }
+        SaveGame(reason);
     }
 
 }
 void Manager::Init(){};
 
-bool Manager::SaveGame(const SaveSettings::Scenarios reason) {
+void Manager::SaveGame(const SaveSettings::Scenarios reason) {
     if (reason == SaveSettings::Scenarios::QuitGame) {
 		Utilities::QuitGame();
-        return true;
+        return;
 	}
     //if (auto ui = RE::UI::GetSingleton(); ui && ui->GameIsPaused()) return QueueSaveGame(SaveSettings::queue_delay,reason);
     const auto ui = RE::UI::GetSingleton();
     if (!ui) {
         QueueSaveGame(SaveSettings::queue_delay, reason);
-        return false;
+        return;
     }
     const auto player = RE::PlayerCharacter::GetSingleton();
     if (!player) {
         logger::error("PlayerCharacter is null!");
-        return false;
+        return;
     }
     const auto player_actorstate = player->AsActorState();
     if (!player_actorstate) {
         logger::error("PlayerCharacter ActorState is null!");
-        return false;
+        return;
     }
 	const auto player_camera = RE::PlayerCamera::GetSingleton();
     const auto attack_state = static_cast<uint32_t>(player_actorstate->GetAttackState());
@@ -201,7 +189,7 @@ bool Manager::SaveGame(const SaveSettings::Scenarios reason) {
         ui->IsMenuOpen(RE::TweenMenu::MENU_NAME)) {
         
         QueueSaveGame(SaveSettings::queue_delay, reason);
-        return false;
+        return;
     }
     
     logger::info("Saving game...");
@@ -225,6 +213,18 @@ bool Manager::SaveGame(const SaveSettings::Scenarios reason) {
         //slm->Save((player_name + player_ws + player_parentcell + date).c_str());
         //GameLock::SetState(GameLock::State::Unlocked);
 	//});
-    SKSE::GetTaskInterface()->AddTask(MainSaveFunction);
-	return true;
+    SKSE::GetTaskInterface()->AddTask([this, reason]() {
+		const bool saved = MainSaveFunction();
+		if (reason != SaveSettings::Scenarios::Timer) return;
+
+		SaveSettings::timer_running = false;
+		if (saved && SaveSettings::close_game) {
+			RE::SendHUDMessage::ShowHUDMessage("Closing game in 10 seconds!");
+			SaveSettings::close_game = false;
+			QueueSaveGame(10, SaveSettings::Scenarios::QuitGame);
+		} else if (SaveSettings::timer_periodic) {
+			QueueTimer();
+		}
+		if (SaveSettings::close_game_warning) RE::DebugMessageBox("Time is up, close the game!");
+	});
 }

@@ -196,9 +196,11 @@ namespace SaveRegistry {
 
 };
 
-inline void MainSaveFunction() {
+inline bool MainSaveFunction() {
+    if (!PluginSettings::running || SaveSettings::block) return false;
+
     const auto curr_time = RE::Calendar::GetSingleton()->GetHoursPassed();
-    if (curr_time - SaveSettings::last_save_time < SaveSettings::min_save_interval) return;
+    if (curr_time - SaveSettings::last_save_time < SaveSettings::min_save_interval) return false;
     SaveSettings::block_autosaving_notif = true;
 	const auto flag = SaveSettings::GetSaveFlag();
 
@@ -206,5 +208,6 @@ inline void MainSaveFunction() {
     Utilities::AutoSave(flag);
 
     SaveSettings::last_save_time = curr_time;
-    if (SaveSettings::notifications) RE::DebugNotification((Utilities::mod_name + ": Game saved.").c_str());
+    if (SaveSettings::notifications) RE::SendHUDMessage::ShowHUDMessage((Utilities::mod_name + ": Game saved.").c_str());
+    return true;
 }
