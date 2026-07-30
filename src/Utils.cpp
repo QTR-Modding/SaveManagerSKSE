@@ -38,7 +38,7 @@ void Utilities::AutoSave(uint32_t flag) {
     return func(RE::BGSSaveLoadManager::GetSingleton(), flag);
 }
 void Utilities::QuitGame(){
-    SKSE::GetTaskInterface()->AddTask([]() { RE::Main::GetSingleton()->quitGame = true; });
+    SKSE::GetTaskInterface()->AddTask([]() { RE::Main::GetSingleton()->GetRuntimeData().quitGame = true; });
 };
 
 bool IsInBowAttackState(const int attack_state) { 

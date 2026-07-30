@@ -20,7 +20,7 @@ class Manager : public Ticker {
     
     void UpdateLoop();
     static void Init();
-    bool SaveGame(SaveSettings::Scenarios reason);
+    void SaveGame(SaveSettings::Scenarios reason);
 
 public:
     Manager()
