@@ -206,5 +206,5 @@ inline void MainSaveFunction() {
     Utilities::AutoSave(flag);
 
     SaveSettings::last_save_time = curr_time;
-    if (SaveSettings::notifications) RE::DebugNotification((Utilities::mod_name + ": Game saved.").c_str());
+    if (SaveSettings::notifications) RE::SendHUDMessage::ShowHUDMessage((Utilities::mod_name + ": Game saved.").c_str());
 }

@@ -31,7 +31,7 @@ void Manager::QueueSaveGame(int seconds, SaveSettings::Scenarios scenario) {
     if (seconds > 0 && queue.size() < 100) {
         queue.insert(std::make_pair(seconds, scenario));
         const auto temp = std::format("Save queued for {} second(s).", seconds);
-        if (SaveSettings::notifications && SaveSettings::queue_notif && scenario != SaveSettings::Scenarios::QuitGame) RE::DebugNotification(temp.c_str());
+        if (SaveSettings::notifications && SaveSettings::queue_notif && scenario != SaveSettings::Scenarios::QuitGame) RE::SendHUDMessage::ShowHUDMessage(temp.c_str());
         Start();
     }
 }
@@ -131,7 +131,7 @@ void Manager::UpdateLoop() {
         const bool saved = SaveGame(reason);
         if (reason == SaveSettings::Scenarios::Timer) {
             if (saved && SaveSettings::close_game) {
-                RE::DebugNotification("Closing game in 10 seconds!");
+                RE::SendHUDMessage::ShowHUDMessage("Closing game in 10 seconds!");
                 SaveSettings::close_game = false;
                 QueueSaveGame(10, SaveSettings::Scenarios::QuitGame);
             }
