@@ -19,7 +19,7 @@ RE::UI_MESSAGE_RESULTS MenuHook<MenuType>::ProcessMessage_Hook(RE::UIMessage& a_
                 const auto old_flag = _menu->menuFlags.get();
                 _menu->menuFlags.set(RE::UI_MENU_FLAGS::kAllowSaving);
                 MainSaveFunction();
-                _menu->menuFlags.set(old_flag);
+                _menu->menuFlags = old_flag;
             }
         } else logger::error("MenuHook: {}, menu not found", menuName);
     }
