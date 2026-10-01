@@ -1,4 +1,6 @@
 #include "UI.h"
+#include "Settings.h"
+#include "SKSEMCP/SKSEMenuFramework.hpp"
 
 void HelpMarker(const char* desc) {
     ImGui::TextDisabled("(?)");

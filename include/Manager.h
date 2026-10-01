@@ -1,5 +1,6 @@
 #pragma once
 #include <shared_mutex>
+#include "Settings.h"
 #include "Ticker.h"
 
 struct PairFirstComparator {
@@ -45,8 +46,6 @@ public:
     bool DeleteQueuedSave(SaveSettings::Scenarios scenario);
 
     inline void ClearQueue();
-
-	//inline bool IsInQueue(SaveSettings::Scenarios scenario);
 
     inline void QueueTimer();
 

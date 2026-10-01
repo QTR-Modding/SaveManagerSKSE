@@ -1,4 +1,5 @@
 #include "Ticker.h"
+#include "Settings.h"
 
 void Ticker::Start() {
     if (m_Running) {

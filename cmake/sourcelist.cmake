@@ -8,5 +8,5 @@ set(sources ${sources}
 	src/Hooks.cpp
 	src/Serialization.cpp
 	src/plugin.cpp
-	src/SaveLoadManager.cpp
+	src/Data.cpp
 )

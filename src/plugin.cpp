@@ -1,5 +1,6 @@
 #pragma once
-
+#include "Hooks.h"
+#include "Serialization.h"
 #include "UI.h"
 
 Manager* manager = nullptr;

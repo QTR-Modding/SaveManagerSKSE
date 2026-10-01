@@ -1,4 +1,7 @@
 #include "Data.h"
+#include "REX/W32/OLE32.h"
+#include "REX/W32/SHELL32.h"
+
 
 auto Data::GetSingleton() -> Data*
 {
