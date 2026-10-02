@@ -157,7 +157,6 @@ void MCP::Settings::RenderTimer(){
         ImGui::SameLine();
         if (ImGui::Button("Stop##timer")) {
             M->DeleteQueuedSave(SaveSettings::Scenarios::Timer);
-            SaveSettings::timer_running = false;
         }
         ImGui::SameLine();
         if (ImGui::Button("Reset##timer")) {
@@ -166,7 +165,6 @@ void MCP::Settings::RenderTimer(){
             } else {
                 SaveSettings::timer_minutes = 0;
                 SaveSettings::timer_seconds = 0;
-                SaveSettings::timer_running = false;
             }
         }
         ImGui::SameLine();
