@@ -6,13 +6,17 @@
 struct PairFirstComparator {
     bool operator()(const std::pair<int, SaveSettings::Scenarios>& lhs,
                     const std::pair<int, SaveSettings::Scenarios>& rhs) const {
-        return lhs.first < rhs.first;
+        if (lhs.first != rhs.first) {
+            return lhs.first < rhs.first;
+        }
+        return lhs.second < rhs.second;
     }
 };
 
 class Manager : public Ticker {
     
     std::shared_mutex sharedMutex_;
+    std::uint64_t timerGeneration_ = 0;
 
     std::set<std::pair<int, SaveSettings::Scenarios>, PairFirstComparator> queue;
     std::map<std::string, unsigned int> time_spent;
@@ -20,7 +24,8 @@ class Manager : public Ticker {
     
     void UpdateLoop();
     static void Init();
-    bool SaveGame(SaveSettings::Scenarios reason);
+    void SaveGame(SaveSettings::Scenarios reason, std::optional<std::uint64_t> timer_generation);
+    void ExecuteSaveTask(SaveSettings::Scenarios reason, std::optional<std::uint64_t> timer_generation);
 
 public:
     Manager()
@@ -39,7 +44,8 @@ public:
 
     static void EnableMod();
 
-    void QueueSaveGame(int seconds, SaveSettings::Scenarios scenario);
+    void QueueSaveGame(int seconds, SaveSettings::Scenarios scenario,
+                       std::optional<std::uint64_t> timer_generation = std::nullopt);
 
     std::vector<std::pair<int, SaveSettings::Scenarios>> GetQueue();
 
@@ -47,6 +53,6 @@ public:
 
     inline void ClearQueue();
 
-    inline void QueueTimer();
+    inline void QueueTimer(std::optional<std::uint64_t> timer_generation = std::nullopt);
 
 };
