@@ -5,9 +5,7 @@
 // https://github.com/ozooma10/OSLAroused-SKSE/blob/master/src/Utilities/Ticker.h
 class Ticker {
 public:
-    explicit Ticker(const std::function<void()>& onTick) : m_OnTick(onTick), m_ThreadActive(false), m_Running(false) {
-        m_Interval = std::chrono::milliseconds(SaveSettings::ticker_interval*1000);
-    }
+    explicit Ticker(const std::function<void()>& onTick) : m_OnTick(onTick), m_ThreadActive(false), m_Running(false) {}
 
     void Start();
 
@@ -19,9 +17,7 @@ private:
     void RunLoop();
 
     std::function<void()> m_OnTick;
-    std::chrono::milliseconds m_Interval;
 
     std::atomic<bool> m_ThreadActive;
     std::atomic<bool> m_Running;
-    std::mutex m_IntervalMutex;
 };

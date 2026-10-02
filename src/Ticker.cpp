@@ -16,12 +16,10 @@ void Ticker::Start() {
 void Ticker::RunLoop(){
     m_ThreadActive = true;
     while (m_Running) {
+        std::this_thread::sleep_for(std::chrono::seconds(SaveSettings::ticker_interval));
+        if (!m_Running) break;
         std::thread runnerThread(m_OnTick);
         runnerThread.detach();
-        m_IntervalMutex.lock();
-        m_Interval = std::chrono::milliseconds(std::min(60000, std::max(500, 1000*SaveSettings::ticker_interval)));
-        m_IntervalMutex.unlock();
-        std::this_thread::sleep_for(m_Interval);
     }
     m_ThreadActive = false;
 };

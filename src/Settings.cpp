@@ -180,7 +180,7 @@ void SaveSettings::LoadJSON(){
         if (main.HasMember("block_autosaving_notif") && main["block_autosaving_notif"].IsBool()) block_autosaving_notif = main["block_autosaving_notif"].GetBool();
 	    if (main.HasMember("block") && main["block"].IsBool()) block = main["block"].GetBool();
 	    if (main.HasMember("queue_delay") && main["queue_delay"].IsInt()) queue_delay = main["queue_delay"].GetInt();
-	    if (main.HasMember("ticker_interval") && main["ticker_interval"].IsInt()) ticker_interval = main["ticker_interval"].GetInt();
+	    if (main.HasMember("ticker_interval") && main["ticker_interval"].IsInt()) ticker_interval = std::clamp(main["ticker_interval"].GetInt(), min_ticker_interval, max_ticker_interval);
 	    if (main.HasMember("notifications") && main["notifications"].IsBool()) notifications = main["notifications"].GetBool();
 		if (main.HasMember("queue_notif") && main["queue_notif"].IsBool()) queue_notif = main["queue_notif"].GetBool();
         if (main.HasMember("min_save_interval") && main["min_save_interval"].IsInt()) temp_min_save_interval = main["min_save_interval"].GetInt();
