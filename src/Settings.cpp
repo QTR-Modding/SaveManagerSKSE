@@ -195,6 +195,7 @@ void SaveSettings::LoadJSON(){
 	    if (timer.HasMember("timer_running") && timer["timer_running"].IsBool()) timer_running = timer["timer_running"].GetBool();
 	    if (timer.HasMember("timer_periodic") && timer["timer_periodic"].IsBool()) timer_periodic = timer["timer_periodic"].GetBool();
 	    if (timer.HasMember("close_game_warning") && timer["close_game_warning"].IsBool()) close_game_warning = timer["close_game_warning"].GetBool();
+	    if (timer.HasMember("close_game") && timer["close_game"].IsBool()) close_game = timer["close_game"].GetBool();
     }
     // Menu
     if (doc.HasMember("menu")) {
