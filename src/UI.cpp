@@ -52,11 +52,8 @@ void __stdcall MCP::RenderSettings() {
     ImGui::SameLine();
     ImGui::SetNextItemWidth(180);
     if (ImGui::InputInt("Save Rotation Size", &SaveRegistry::max_saves)) {
-        SaveRegistry::max_saves = std::min(std::max(0, SaveRegistry::max_saves),50);
-		for (auto& [_, saves] : SaveRegistry::registry) {
-			saves.rset_capacity(SaveRegistry::max_saves);
-        }
-		SaveRegistry::to_json();
+        constexpr int max_rotation_size = 50;
+        SaveRegistry::SetMaxSaves(std::min(SaveRegistry::max_saves, max_rotation_size));
     }
     ImGui::SameLine();
     HelpMarker("Maximum number of plugin-generated saves to keep before the oldest one is deleted.");
