@@ -47,14 +47,23 @@ bool Data::DeleteSaveFile(const RE::BSFixedString& fileName)
 	const auto save_dir = Data::GetSingleton()->GetSaveFileDirectory();
     if (!save_dir) { logger::critical<>("Failed to obtain save files path!"); return false;}
 
+    bool deleted = false;
+    std::filesystem::path main_save_file;
     try {
         if (std::filesystem::exists(*save_dir)) {
             for (const auto& entry : std::filesystem::directory_iterator(*save_dir)) {
                 if (entry.path().stem() == fileName.data()) {
+                    if (entry.path().extension() == ".ess") {
+                        main_save_file = entry.path();
+                        continue;
+                    }
                     logger::info("Deleting file: '{}'", entry.path().filename().string());
-                    std::filesystem::remove(entry);
-					return true;
+                    if (std::filesystem::remove(entry)) deleted = true;
                 }
+            }
+            if (!main_save_file.empty()) {
+                logger::info("Deleting file: '{}'", main_save_file.filename().string());
+                if (std::filesystem::remove(main_save_file)) deleted = true;
             }
         }
     } catch (const std::filesystem::filesystem_error& error) {
@@ -62,5 +71,5 @@ bool Data::DeleteSaveFile(const RE::BSFixedString& fileName)
 		return false;
     }
 
-	return true;
+	return deleted;
 }

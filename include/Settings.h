@@ -185,9 +185,10 @@ namespace SaveRegistry {
 	using namespace rapidjson;
     inline std::map<uint32_t,boost::circular_buffer<uint32_t>> registry;
 
-    bool Add(uint32_t charID, uint32_t saveNo);
+    void Add(uint32_t charID, uint32_t saveNo);
 	bool Remove(uint32_t charID, uint32_t saveNo);
 	void HandleRotation();
+    void SetMaxSaves(int size);
 
 	void to_json();
 	void from_json();

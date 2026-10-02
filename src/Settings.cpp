@@ -374,34 +374,53 @@ rapidjson::Value SaveSettings::Other::to_json(Document::AllocatorType& a) {
     return other;
 };
 
-bool SaveRegistry::Add(const uint32_t charID, const uint32_t saveNo)
+namespace {
+    void ResizeSaveBuffer(const uint32_t charID, boost::circular_buffer<uint32_t>& saves, const std::size_t capacity)
+    {
+        while (saves.size() > capacity) {
+            if (!SaveRegistry::Remove(charID, saves.front())) return;
+            saves.pop_front();
+        }
+        saves.set_capacity(capacity);
+    }
+}
+
+void SaveRegistry::Add(const uint32_t charID, const uint32_t saveNo)
 {
-	if (!registry.contains(charID)) {
-		registry[charID] = boost::circular_buffer<uint32_t>(max_saves);
-	}
-	if (const auto& temp = registry[charID]; std::ranges::find(temp, saveNo) != temp.end()) {
-		return false;
-	}
-    const auto removed_first = registry[charID].full();
-	registry[charID].push_back(saveNo);
-	return removed_first;
+    if (!registry.contains(charID)) {
+        registry[charID] = boost::circular_buffer<uint32_t>(max_saves);
+    }
+    auto& saves = registry[charID];
+    if (std::ranges::find(saves, saveNo) != saves.end()) return;
+    if (saves.full()) saves.set_capacity(saves.size() + 1);
+    saves.push_back(saveNo);
+    ResizeSaveBuffer(charID, saves, max_saves);
+}
+
+void SaveRegistry::SetMaxSaves(const int size)
+{
+    max_saves = std::max(0, size);
+    if (max_saves > 0) {
+        for (auto& [charID, saves] : registry) {
+            ResizeSaveBuffer(charID, saves, max_saves);
+        }
+    }
+    to_json();
 }
 
 bool SaveRegistry::Remove(const uint32_t charID, const uint32_t saveNo)
 {
     const auto save_manager = RE::BGSSaveLoadManager::GetSingleton();
-	save_manager->PopulateSaveList();
-	std::string filename;
+    if (!save_manager || !save_manager->PopulateSaveList()) return false;
     for (const auto& it : save_manager->saveGameList) {
-		it->PopulateFileEntryData();
+        if (!it || !it->PopulateFileEntryData()) return false;
 		if (it->characterID != charID) continue;
-        if (const auto save_type = static_cast<int>(it->saveType.get()); save_type != 0x1) continue;
+        if (it->saveType != RE::BGSSaveLoadFileEntry::SaveType::kSave) continue;
 		if (it->saveNumber != saveNo) continue;
 		return Data::DeleteSaveFile(it->fileName);
 	}
 
-	return false;
-	
+	return true;
 }
 
 void SaveRegistry::HandleRotation()
@@ -409,14 +428,14 @@ void SaveRegistry::HandleRotation()
 	if (max_saves <= 0) return;
 
     const auto manager = RE::BGSSaveLoadManager::GetSingleton();
-	manager->PopulateSaveList();
+    if (!manager || !manager->PopulateSaveList()) return;
     const auto curr_playerID = manager->displayCharacterID;
 
 	std::set<uint32_t> save_nos;
 	for (const auto& it : manager->saveGameList) {
-		it->PopulateFileEntryData();
+        if (!it || !it->PopulateFileEntryData()) return;
 		if (it->characterID != curr_playerID) continue;
-        if (const auto save_type = static_cast<int>(it->saveType.get()); save_type != 0x1) continue;
+        if (it->saveType != RE::BGSSaveLoadFileEntry::SaveType::kSave) continue;
 		save_nos.insert(it->saveNumber);
 	}
 
@@ -429,8 +448,7 @@ void SaveRegistry::HandleRotation()
         }
     }
 	
-	const auto first_saveno = registry.contains(curr_playerID) && !registry[curr_playerID].empty() ? registry[curr_playerID].front() : 0;
-    if ([[maybe_unused]] const auto removed_first = Add(curr_playerID, last_save_no+1)) Remove(curr_playerID,first_saveno);
+    Add(curr_playerID, last_save_no + 1);
 	to_json();
 }
 
@@ -513,6 +531,10 @@ void SaveRegistry::from_json()
         return;
     }
 
+	if (doc.HasMember("max_saves") && doc["max_saves"].IsInt()) {
+		max_saves = std::max(0, doc["max_saves"].GetInt());
+	}
+
     const Value& registry_json = doc["registry"];
     for (auto itr = registry_json.MemberBegin(); itr != registry_json.MemberEnd(); ++itr) {
         // Convert the key back to uint32_t
@@ -525,7 +547,7 @@ void SaveRegistry::from_json()
         }
 
         const Value& buffer_array = itr->value["buffer"];
-        boost::circular_buffer<uint32_t> buffer(buffer_array.Size());
+        boost::circular_buffer<uint32_t> buffer(std::max<std::size_t>(max_saves, buffer_array.Size()));
 
         // Iterate through the buffer array and populate the circular buffer
         for (SizeType i = 0; i < buffer_array.Size(); i++) {
@@ -539,9 +561,5 @@ void SaveRegistry::from_json()
         // Add to the registry map
         SaveRegistry::registry[key] = buffer;
     }
-
-	if (doc.HasMember("max_saves") && doc["max_saves"].IsInt()) {
-		max_saves = doc["max_saves"].GetInt();
-	}
 
 }
