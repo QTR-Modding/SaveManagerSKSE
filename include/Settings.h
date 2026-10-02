@@ -48,7 +48,9 @@ namespace SaveSettings {
 
 	inline bool block = false;
     inline int queue_delay = 10;  // in seconds
-    inline int ticker_interval = 1; // in seconds
+    constexpr int min_ticker_interval = 1;
+    constexpr int max_ticker_interval = 60;
+    inline int ticker_interval = min_ticker_interval; // in seconds
 
 	inline bool notifications = true;
 	inline bool queue_notif = true;
